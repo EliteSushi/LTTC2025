@@ -33,6 +33,7 @@
 }
 \lstset{style=mystyle}
 \addbibresource{./Sources.bib}
+\setlength{\parindent}{0pt}
 
 \begin{document}
 \noindent Homework \textbf{LTTC Quantum dynamics}\hfill  Mauro Gascon Navas\\
@@ -41,15 +42,15 @@ TCCM \today
 \hrulefill
 \par
 \vspace{1cm} 
-All fll scripts and files generated while completing each homework can be found in its this \textcolor{blue}{\href{https://github.com/EliteSushi/LTTC2025/tree/main/Molecular_Dynamics}{Github repository}}.
+All scripts and files generated while completing this homework can be found in this \textcolor{blue}{\href{https://github.com/EliteSushi/LTTC2025/tree/main/Molecular_Dynamics}{Github repository}}.
 
 \section{Spherical confinement potential}
 
-A Spherical Confinement Potential (SCP) is added to as an option the program to ensure that the particles do not "escape" the simulation. The potential energy is defined as:
+A Spherical Confinement Potential (SCP) is added to as a functionality the program to ensure that the particles do not "escape" the simulation bulk. The potential energy is defined as:
 \[
-E = 0.008 \cdot (dist_{com}-R_{max})^4 = 0.008 \cdot (\abs{\vec{r}}-R_{max})^4, \quad \abs{\vec{r}} > R_{max} 
+E = 0.008 \cdot (dist_{COM}-R_{max})^4 = 0.008 \cdot (\abs{\vec{r}}-R_{max})^4, \quad \abs{\vec{r}} > R_{max} 
 \]
-Where the center of mass (com) is defined as the origin. The force is then calculated as the gradient:
+Where the center of mass (COM) is defined as the origin. The force is then calculated as the negative gradient of the potential:
 \[
 \begin{aligned}
 F = -\nabla E &= -\nabla \left( 0.008 \cdot (\abs{\vec{r}}-R_{max})^4 \right) \\
@@ -58,16 +59,14 @@ F = -\nabla E &= -\nabla \left( 0.008 \cdot (\abs{\vec{r}}-R_{max})^4 \right) \\
 \end{aligned}
 \]
 
-The subroutine \textit{apply\_scp} is added to the program to calculate the forces and potential energy due to the SCP. The subroutine takes as inputs the number of atoms, the positions, forces, potential energy and the radius of the confinement. The center of mass is calculated and the forces are updated for each atom.\\
+The subroutine \textit{apply\_scp} is added to the program to calculate the forces and potential energy due to the SCP. The subroutine takes as inputs the number of atoms, the positions, forces, potential energy and the radius of the confinement. The center of mass is calculated and the forces are updated for each atom. To activate the SCP, the program has to be called using the \textit{-SCP} flag, followed by the $R_{max}$ in \r{A}.\\
 \par
-At every step \textit{apply\_scp} is called: the COM is calculated and all particles are translated so it is centered at the origin. then de distances are computed and the forces and potntial energies of for the particles that are outside the confinement are updated.\\
-The subroutine is called at the end of the main loop, after the forces are calculated.\\
+At every step \textit{apply\_scp} is called: the COM is calculated and all particles are translated so it is centered at the origin. then de distances are computed and the forces and potential energies for the particles that are outside the confinement are updated. The subroutine is called at the end of the main loop, after the forces are calculated.\\
 \par
-A sample run for a system of 125 atoms (\textit{liquid-argon.xyz}) confined with $R_{max}=23$ \r{A} is  provided in Figure \ref{fig:SCP}. To check the conservation of energy, an NVE simmulation is performed setting the initial temperature to 0 K to avoid random conditions (see Section 2). All the kinetic energy of the system comes from the energy stored in the non-optimal initial geometry. As we can see, the total energy remains constant through the simmulation, and its small noise can be explained from the timestep (which needs to be large to actually generate geometries where the SCP is activated) and the very steep \textit{r} dependence ($SCP \sim r^4$) of the potential. \\
-The command to run it in this implementation is:
+A sample run for the given system of 125 atoms (\textit{liquid-argon.xyz}) confined with $R_{max}=23$ \r{A} is  provided in Figure \ref{fig:SCP}. To check the conservation of energy, an NVE simmulation is performed setting the initial temperature to 0 K to avoid random initial conditions and ensure reproducibility (see Section 2). All the kinetic energy of the system comes from the energy stored in the non-optimal initial geometry. The total energy remains constant through the simmulation, its small noise can be explained from the timestep (which needs to be large to sample geometries where the SCP is activated) and the very steep \textit{r} dependence ($SCP \sim r^4$) of the potential. The command used to run this simulation is:
 
 \begin{lstlisting}[language=bash]
-  ./md_program -FILE liquid-argon.xyz -SAVEFREQ 100 -TIMESTEP 1 -MAX_MD_STEPS 100000  -SCP 23 -TEMP 0\end{lstlisting}
+  ./md_program.exe -FILE liquid-argon.xyz -TIMESTEP 0.1 -SAVEFREQ 100 -MAX_MD_STEPS 100000 -TEMP 0 -SCP 23\end{lstlisting}
 
 \begin{figure}[th!]
     \centering
@@ -114,7 +113,12 @@ subroutine apply_scp(forces,pot_ener,positions,nbr_atomes,R_scp)
 end subroutine apply_SCP \end{lstlisting}
 
 \section{Initial random velocities}
-To genereate the initial velocities following the boltzman distribution utilizing the given subroutine \textit{gaussian\_distr} to generate random numbers with a normal distribution. The subroutine \textit{initial\_velocities} is added to the program to initialize the velocities of the particles. The subroutine takes as inputs the number of atoms, the velocities, the temperature and the mass of the particles. The velocities are updated for each atom.\\
+In this section, a subroutine to genereate the initial velocities following the Boltzman distribution is implemented. The given subroutine \textit{gaussian\_distr} is used to generate random numbers sampled from a normal distribution:
+\[
+v_i = \sqrt{\frac{k_b T}{m}}\cdot gauss\_distr()
+\]
+
+The subroutine \textit{initial\_velocities} is added to the program to initialize each velocity component of every particle independently. The subroutine takes as inputs the number of atoms, the velocities, the temperature and the mass of the particles.\\
 \par
 In Figure \ref{fig:dist} the results of $10^{6}$ points generated by \textit{initial\_velocities} and \textit{gaussian\_distr()} are compared to their expectations, showing its correct functioning.\\
 
@@ -122,7 +126,7 @@ In Figure \ref{fig:dist} the results of $10^{6}$ points generated by \textit{ini
     \centering
     \subfloat[\textit{gauss\_distr()}]{\includegraphics[width=0.5\textwidth]{Gauss.png}}
     \subfloat[\textit{initial\_velocities}]{\includegraphics[width=0.5\textwidth]{Boltz.png}}
-    \caption{Comparison between the geerated and expected gaussian distribution with $\mu=0,\sigma=1$}(a), and the velocity boltzamnn distribution with $\frac{K_bT}{m}=1$ (b).
+    \caption{Comparison between the generated and expected distributions. Left, gaussian distribution with $\mu=0,\sigma=1$. Right, velocity boltzamnn distribution with $\frac{K_bT}{m}=1$.}
     \label{fig:dist}
 \end{figure}
 
@@ -145,17 +149,18 @@ end subroutine initial_velocities \end{lstlisting}
 
 \section{Periodic boundary conditions}
 
-To implement periodic boundry conditions (PBC) the subroutine \textit{get\_distances\_forces\_PBC} is added to the program. The subroutine takes as inputs the number of atoms, the positions, distances, forces, the box size (which has to be passed as an argument when calling the program), and $\sigma$ and $\epsilon$ of the Lennard-Jones potential. The distances and forces are updated for each atom.\\
+To implement periodic boundry conditions (PBC) the subroutine \textit{get\_distances\_forces\_PBC} is added to the program. The subroutine takes as inputs the number of atoms, the positions, distances, forces, the box sidelength, and $\sigma$ and $\epsilon$ of the Lennard-Jones potential. The functionality is activated by calling the program with the \textit{-PBC} flag, followed by the box sidelength in \r{A}. \\
+If the user tries to PBC together with SCP, the program returns an error informing of the incapability of doing so.\\
 \par
-At every step, the subroutine calculates the distances and the forces using the nearest image of each particle pair. This translate that each unique particle only interacts once with each other unique particles (and not with itself). The downside of this approach is that the code will not be able to model a system with a small number of particles, like the provided example input of 10 Ar atoms. Arguably, PBC with such small systems are going to be unreallistic in any case. The subsequent calculations are performed with a bigger system of 125 Ar atoms.\\
-Additionally, for better visualization, the atoms are constantly wrapped to the unit cell. Finally, this functionality is not allowed to be used with the SCP.\\
+At every step, the subroutine calculates the distances and the forces using the nearest image of each particle pair. This translates to each unique particle only interacting once with each other unique particles (and not with itself). The downside of this approach is that the code will not be able to model a system with a small number of particles, like the provided example input of 10 Ar atoms. Arguably, PBC with such small systems are going to be unreallistic in any case. The subsequent calculations are performed with a bigger system of 125 Ar atoms.\\
+Additionally, for better visualization, the atoms are constantly wrapped to the unit cell.\\
 
 To test the performance of subroutine, the results from \cite{rahman1964correlations} are reproduced and compared. The radial distribution function is calculated for liquid argon at 94.4 K, $\epsilon=0.24$ K and $\sigma=3.4$ Å. The simulation is run with 125 particles (in \cite{rahman1964correlations} they use 864 particles) in a cubic box with periodic boundary conditions of 18.2 Å:
 
 \begin{lstlisting}[language=bash]
     ./md_program -FILE liquid-argon.xyz -TIMESTEP 1 -PBC 18.206778313424067 -SAVEFREQ 100 -MAX_MD_STEPS 10000 -THERMO BEREN 10 -TEMP 94.4 -EPS 0.23846451108000002 -SIGMA 3.4 \end{lstlisting}
 
-The trajectory is then analyzed using VMD to obtain the radial distribution function. It contains three peaks at 3.7 Å (g(r) = 3), 7.1 Å (g(r)=1.2) which are in agreement with the results of \cite{rahman1964correlations}.
+The trajectory is then analyzed using VMD to obtain the radial distribution function. It contains two peaks, g(3.7) = 2.9 and g(7.1)=1.3, which are in agreement with the results of \cite{rahman1964correlations}.
 
 \begin{figure}[h]
   \centering

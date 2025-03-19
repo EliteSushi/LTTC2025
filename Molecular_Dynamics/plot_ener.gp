@@ -1,5 +1,5 @@
-#set terminal png size 800,450 enhanced font "TeX Gyre Termes,20"
-#set output 'report/PBC_E.png'
+#set terminal png size 1000,450 enhanced font "TeX Gyre Termes,20"
+#set output 'report/SCP.png'
 #set border linewidth 3.5
 
 set xlabel 'Time (fs)'

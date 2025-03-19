@@ -33,6 +33,7 @@
 }
 \lstset{style=mystyle}
 \addbibresource{./Sources.bib}
+\setlength{\parindent}{0pt}
 
 \begin{document}
 \noindent Homework \textbf{LTTC Quantum dynamics}\hfill  Mauro Gascon Navas\\
@@ -41,12 +42,12 @@ TCCM \today
 \hrulefill
 \par
 \vspace{1cm} 
-All fll scripts and files generated while completing each homework can be found in its this \textcolor{blue}{\href{https://github.com/EliteSushi/LTTC2025/tree/main/Quantum_Dynamics}{Github repository}}.
+All scripts and files generated while completing this homework can be found in this \textcolor{blue}{\href{https://github.com/EliteSushi/LTTC2025/tree/main/Quantum_Dynamics}{Github repository}}.
 
 \section{Hermite Polynomials Function}
 
-To calculculate the hermite polynomials, a recursive function can be used. The function calls itself to calculate $H_{n-1}(y)$ and $H_{n-2}(y)$ until reaching $H_1(y)=1$ and $H_0(y)=2y$, where its values are set and the recursion loop is exited. In the code propagate, the functions are written in a module called \textit{functions2use}.\\
-Something worth noting, is that at each step of the recursion, the function is called twice, so the complexity of the function is $O(2^n)$, which is not ideal for large $n$. This contrasts to e.g. a factorial function (which is also typically written as a recursive function), where its complexity goes as $O(n)$.\\
+To calculculate the hermite polynomials, a recursive function can be used. The function calls itself to calculate $H_{n-1}(y)$ and $H_{n-2}(y)$ until reaching $H_1(y)=1$ and $H_0(y)=2y$, where its values are set and the recursion loop is exited. In the code \textit{propagate.f90}, the functions are written in a module called \textit{functions2use}.\\
+Something worth noting, is that at each step of the recursion, the function is called twice, so the complexity of the function is $O(2^n)$, which is not ideal for large $n$ and could cause a stack overflow. This contrasts to e.g. a factorial function (which is also typically written as a recursive function), where its complexity goes as $O(n)$. In this case this is not noticeable, but if we wanted to use it to find large order $H_{n}$, this function could be implemented as a loop.\\
 \par 
 The function taks two inputs: the order of the polynomial (n) and the point to evaluate (y), and outputs one result (h).
     \begin{lstlisting}[caption=Recursive function to calculate hermite polynomials]
@@ -74,8 +75,7 @@ end function hermite \end{lstlisting}
 
 \section*{2 3 4 \quad Wavefunction initialization}
 \setcounter{section}{4}
-The \textit{initpsi} subroutine is modified so that the wavefunction is initialized as a weighted sum of the harmonic eigenfunctions. To make it as general as possible, first the number of eigenfunctions to use (\textit{ncoeff}) is read from the input file \textit{wavefunction}. Then the coefficients for each parent eigenfunction are read and stored as an array (\textit{coeff}) in a sequential manner. In \textit{initpsi}, \textit{coeff} is looped over.\\
-Finally, the wavefunction is normalized exploiting the fact that the eigenfunctions are orthogonal to eachother: $N^2 = \Sigma_i c_i^2$.\\
+The \textit{initpsi} subroutine is modified so that the wavefunction is initialized as a weighted sum of the harmonic eigenfunctions. To make it as general as possible, first the number of eigenfunctions to use (\textit{ncoeff}) is read from the input file \textit{wavefunction}. Then the coefficients for each parent eigenfunction are read and stored as an array (\textit{coeff}) in a sequential manner. In \textit{initpsi}, \textit{coeff} is looped over. Finally, the wavefunction is normalized exploiting the fact that eigenfunctions with nonequal eigenvalues are orthogonal to eachother: $N^2 = \Sigma_i c_i^2$.\\
 \par
 The modified subroutine takes as inputs: \textit{npoints} (x axis grid), \textit{dx} (grid spacing), \textit{x0} (center of the wavefunction), \textit{psi0} (wavefunction array), \textit{ncoeff} (number of eigenfunctions), \textit{coeff} (ordered array with the eigenfuction coefficients).
 
@@ -113,8 +113,8 @@ subroutine initpsi(npoints,dx,x0,psi0,ncoeff,coeff)
     psi0 = psi0 / N 
 end subroutine initpsi\end{lstlisting}
 
-The initial coefficients are read from the \textit{wavefunction} file by modifying the main propgram \textit{propagate}: The added arguments are the number of eigenfunctions to use (\textit{ncoeff}), which is also the highest eigenfunction order, followed by the cefficients, one at each line.
-Additionally, to make the outputs lighter, a snapshot frequency is also added, it will only output the positions every \textit{snapshot} steps. 
+The initial coefficients are read from the \textit{wavefunction} file by modifying the main propgram \textit{propagate}: The added arguments are the number of eigenfunctions to use (\textit{ncoeff}), which is also the highest eigenfunction order, followed by the cefficients, one at each line in growing order.
+Additionally, to make the outputs lighter, a snapshot frequency is also added; it will only output the positions every \textit{snapshot} steps. 
     \begin{lstlisting}[caption=Reading the coefficients in the main program]
 open(unit=10,file='wavepacket') ! User specified eigenfunctions/coefficents
     ...
@@ -140,10 +140,10 @@ close(10) \end{lstlisting}
 1       #c1
 0       #c2\end{lstlisting}
 
-Finally, though not shown, for convenience the plotting subroutines were rewritten to use gnuplot.
+Finally, though not shown, for convenience the plotting subroutines were rewritten to use gnuplot.\\
 
 \section{Pure Eigenfunctions}
-For pure eigenfunctions, the probability density of the pure eigenfunctions remains static:
+For pure eigenfunctions, the probability density remains static:
 \[
 \Psi_{n}(x,t) = e^{-iE_nt} \cdot \Phi_{n}(x) = e^{-it\omega(n+\frac{1}{2})} \cdot \Phi_{n}(x) 
 \]\[
@@ -163,7 +163,8 @@ For pure eigenfunctions, the probability density of the pure eigenfunctions rema
 \end{figure}
 
 \section{Mixed Eigenfunctions}
-When the wavefunction is in a superposition of eigenstates, the probability density will no longer be static as the frequency of each eigenstate is different:
+When the wavefunction is in a superposition of eigenstates, the probability density will no longer be static as the frequency of each eigenstate is different, causing interferences:\\
+\begin{centering}
 \[
 \Psi_{n}(x,t) = \sum_{n} c_n \cdot e^{-iE_nt} \cdot \Phi_{n}(x) = \sum_{n} c_n \cdot e^{-it\omega(n+\frac{1}{2})} \cdot \Phi_{n}(x)
 \]
@@ -176,15 +177,17 @@ When the wavefunction is in a superposition of eigenstates, the probability dens
 &= \sum_n |c_n|^2 |\Phi_n(x)|^2 + 2 \sum_n \sum_{m>n} c_n c_m \Phi_n(x) \Phi_m(x) \cdot \cos(t\omega(m-n))
 \end{aligned}
 \]
+\end{centering}
+\\
 The resulting probability density is a function of time where each cross term oscilates with a frequency of $\omega \cdot (m-n)$. The overall period will be determined by the greatest common divisor (GCD) of the $(m-n)$ set, being $T=\frac{2\pi}{GCD_{\{m-n\}}\cdot\omega}$. \\
-In this case, the fundamental angular frequency is 0.2825 fs$^{-1}$, giving a period of $T=22.23$ fs.\\
+In this case, the $\omega_0$ = 0.2825 fs$^{-1}$, giving a maximum period of $T=22.23$ fs.\\
 \par
 The overall motion of the wavefunction will come from the constructive/destructive interference of its parent eigenfunctions. For instance, all even $\Phi_n$ have an antinode at the center, so we can expect a great variation in the probability density there. Bellow the cases for $\Psi = \ket{11111}$, $\Psi = \ket{10101}$ and $\Psi = \ket{01010}$ are explored.
 
 
 \subsection{Case $\Psi = \ket{11111}$}
 
-The wavefunction is initialized as a superposition of the first 5 eigenfunctions with equal weight. The probability density is plotted at different times in Figure \ref{fig:H11111}. The probability density oscilates with a period of $T=2\pi/\omega=22.23$ fs, as $GCD_{\{m-n\}}=1$. The overall motion would be that of a "travelling wave", without simmetry.
+The wavefunction is initialized as a superposition of the first 5 eigenfunctions with equal weight. The probability density is plotted at different times in Figure \ref{fig:H11111}. $|\Psi_{n}(x,t)|^2$ oscilates with a period of $T=2\pi/\omega=22.23$ fs, as $GCD_{\{m-n\}}=1$. The overall motion would be that of a "travelling wave".
 \begin{figure}[h!]
     \centering
     \subfloat[$t=0.0$ fs $(0 T)$]{\includegraphics[width=0.25\textwidth]{H1_1.png}}
@@ -197,7 +200,7 @@ The wavefunction is initialized as a superposition of the first 5 eigenfunctions
 
 \subsection{Case $\Psi = \ket{10101}$}
 
-The wavefunction is initialized as a superposition of the first 3 even eigenfunctions with equal weight. The probability density is plotted at different times in Figure \ref{fig:H10101}. The probability density is oscilates with a period of $T=\pi/\omega=11.12$ ( $GCD_{\{m-n\}}=2$). Its movement is that of a standing wave, symmetric around its center but without nodes. Because all the components are even functions, all contribute with an antinode in the center, and we can observe the greatest interference there.
+The wavefunction is initialized as a superposition of the first 3 even eigenfunctions with equal weight. The probability density is plotted at different times in Figure \ref{fig:H10101}. $|\Psi_{n}(x,t)|^2$ oscilates with a period of $T=\pi/\omega=11.12$ ( $GCD_{\{m-n\}}=2$). Its movement is that of a standing wave, symmetric around its center but without nodes. Because all the components are even functions, all contribute with an antinode in the center, and we can observe the greatest interference there.
 \begin{figure}[h!]
     \centering
     \subfloat[$t=0.0$ fs $(0 T)$]{\includegraphics[width=0.25\textwidth]{H2_1.png}}
@@ -210,7 +213,7 @@ The wavefunction is initialized as a superposition of the first 3 even eigenfunc
 
 \subsection{Case $\Psi = \ket{01010}$}
 
-The wavefunction is initialized as a superposition of the first 2 odd eigenfunctions with equal weight. The probability density is plotted at different times in Figure \ref{fig:H01010}. The probability density oscilates with a period of $T=\pi/\omega=11.12$ fs ( $GCD_{\{m-n\}}=2$).  Its movement is that of a standing wave, symmetric around its center with a node in the middle. In contrast to the previous case, we see this node as the parent functions also contain that node.
+The wavefunction is initialized as a superposition of the first 2 odd eigenfunctions with equal weight. The probability density is plotted at different times in Figure \ref{fig:H01010}. $|\Psi_{n}(x,t)|^2$ oscilates with a period of $T=\pi/\omega=11.12$ fs ( $GCD_{\{m-n\}}=2$).  Its movement is that of a standing wave, symmetric around its center with a node in the middle. In contrast to the previous case, this node appears as the parent functions also contain it.
 \begin{figure}[h!]
     \centering
     \subfloat[$t=0.0$ fs $(0 T)$]{\includegraphics[width=0.25\textwidth]{H3_1.png}}
