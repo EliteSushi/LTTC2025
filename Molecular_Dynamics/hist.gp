@@ -2,7 +2,7 @@ datafile = 'gauss_bin'
 binwidth = 0.2
 
 set terminal png size 1200,850 enhanced font "TeX Gyre Termes,20"
-set output 'LaTEX/Gauss.png'
+set output 'report/Gauss.png'
 set border linewidth 3.5
 
 bin(x) = binwidth * floor(x / binwidth)

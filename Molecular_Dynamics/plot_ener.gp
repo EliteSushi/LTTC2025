@@ -1,6 +1,6 @@
-set terminal png size 800,450 enhanced font "TeX Gyre Termes,20"
-set output 'LaTEX/PBC_E.png'
-set border linewidth 3.5
+#set terminal png size 800,450 enhanced font "TeX Gyre Termes,20"
+#set output 'report/PBC_E.png'
+#set border linewidth 3.5
 
 set xlabel 'Time (fs)'
 set ylabel 'Energy (au)'
