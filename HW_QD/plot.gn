@@ -1,0 +1,13 @@
+ set terminal gif animate delay 10 size 600,800
+ set output 'evo.gif'
+ stats 'datafile' nooutput
+ set xrange [-1:1]
+ set yrange [0:200]
+ set xlabel 'x'
+ set ylabel 'Potential / {|Ψ|}^{2}'
+ set title 'Wavefunction and Potential Evolution'
+ do for [t=0:         200 ] {
+     set key title sprintf("Time: %.2f fs", t *   0.20000000000000001      )
+     plot 'psi.dat' index t using 1:2 with lines title 'Potential' lw 4, \
+          '' index t using 1:3 with lines title sprintf('Psi', t) lw 4
+ }

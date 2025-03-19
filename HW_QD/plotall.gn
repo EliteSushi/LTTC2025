@@ -1,0 +1,26 @@
+Hn(x, n) = (n == 0) ? 1 : \
+           (n == 1) ? 2*x : \
+           (n == 2) ? 4*x**2 - 2 : \
+           (n == 3) ? 8*x**3 - 12*x : \
+           (n == 4) ? 16*x**4 - 48*x**2 + 12 : 0
+
+psi(x, n) = (Hn(x, n) * exp(-x**2 / 2) / sqrt(2**n * gamma(n + 1) * sqrt(pi)))**2
+
+E(n) = n + 0.5
+
+set terminal qt  # Use 'qt', 'wxt', or 'x11' for interactive display
+set xlabel "x"  
+set ylabel "Potential / {|{/Symbol Y}_n(x)|}^2 (offset by E_n)"  
+set title "Harmonic Oscillator: Eigenfunctions and Potential"
+set xrange [-5:5]
+set yrange [-0.5:6]
+set key top right
+
+set linetype 1 lc rgb "blue"    lw 2   # n=0
+set linetype 2 lc rgb "orange"  lw 2   # n=1
+set linetype 3 lc rgb "green"   lw 2   # n=2
+set linetype 4 lc rgb "red"     lw 2   # n=3
+set linetype 5 lc rgb "purple"  lw 2   # n=4
+
+plot 0.5*x**2 with lines dashtype "--" lt 0 title "V(x)", \
+     for [n=0:4] psi(x, n) + E(n) title sprintf("{/Symbol Y}_{%d}", n) lt n+1
